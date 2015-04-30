@@ -2,12 +2,13 @@ TARGETS = epserver epwget
 CC = gcc -g -O3
 DPDK=@DPDK@
 PS=@PSIO@
+TUNTAP=@TUNTAP@
 
 # DPDK LIBRARY and HEADER
 DPDK_INC=@DPDKLIBPATH@/include
 DPDK_LIB=@DPDKLIBPATH@/lib/
 
-# mtcp library and header 
+# mtcp library and header
 MTCP_FLD    =../../mtcp/
 MTCP_INC    =-I${MTCP_FLD}/include
 MTCP_LIB    =-L${MTCP_FLD}/lib
@@ -26,6 +27,11 @@ ifeq ($(PS),1)
 INC += -I{PS_INC}
 LIBS += -lmtcp -L${PS_DIR}/lib -lps -lpthread -lnuma -lrt
 endif
+
+ifeq ($(TUNTAP),1)
+LIBS += -lmtcp -lpthread -lnuma -lrt
+endif
+
 
 # CFLAGS for DPDK-related compilation
 INC += ${MTCP_INC}

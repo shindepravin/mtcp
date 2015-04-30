@@ -168,7 +168,7 @@ dpdk_init_handle(struct mtcp_thread_context *ctxt)
 			    "Can't allocate memory\n");
 		exit(EXIT_FAILURE);
 	}
-	
+
 	sprintf(mempool_name, "mbuf_pool-%d", ctxt->cpu);
 	dpc = (struct dpdk_private_context *)ctxt->io_private_context;
 	dpc->pktmbuf_pool = pktmbuf_pool[ctxt->cpu];
@@ -202,16 +202,16 @@ int
 dpdk_link_devices(struct mtcp_thread_context *ctxt)
 {
 	/* linking takes place during mtcp_init() */
-	
+
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
 void
 dpdk_release_pkt(struct mtcp_thread_context *ctxt, int ifidx, unsigned char *pkt_data, int len)
 {
-	/* 
+	/*
 	 * do nothing over here - memory reclamation
-	 * will take place in dpdk_recv_pkts 
+	 * will take place in dpdk_recv_pkts
 	 */
 }
 /*----------------------------------------------------------------------------*/
@@ -221,11 +221,11 @@ dpdk_send_pkts(struct mtcp_thread_context *ctxt, int nif)
 	struct dpdk_private_context *dpc;
 	mtcp_manager_t mtcp;
 	int ret, i;
-	
+
 	dpc = (struct dpdk_private_context *)ctxt->io_private_context;
 	mtcp = ctxt->mtcp_manager;
 	ret = 0;
-	
+
 	/* if there are packets in the queue... flush them out to the wire */
 	if (dpc->wmbufs[nif].len >/*= MAX_PKT_BURST*/ 0) {
 		struct rte_mbuf **pkts;
@@ -248,7 +248,7 @@ dpdk_send_pkts(struct mtcp_thread_context *ctxt, int nif)
 #endif
 		do {
 			/* tx cnt # of packets */
-			ret = rte_eth_tx_burst(nif, ctxt->cpu, 
+			ret = rte_eth_tx_burst(nif, ctxt->cpu,
 					       pkts, cnt);
 			pkts += ret;
 			cnt -= ret;
@@ -268,7 +268,7 @@ dpdk_send_pkts(struct mtcp_thread_context *ctxt, int nif)
 		/* reset the len of mbufs var after flushing of packets */
 		dpc->wmbufs[nif].len = 0;
 	}
-	
+
 	return ret;
 }
 /*----------------------------------------------------------------------------*/
@@ -283,14 +283,14 @@ dpdk_get_wptr(struct mtcp_thread_context *ctxt, int nif, uint16_t pktsize)
 
 	dpc = (struct dpdk_private_context *) ctxt->io_private_context;
 	mtcp = ctxt->mtcp_manager;
-	
+
 	/* sanity check */
 	if (unlikely(dpc->wmbufs[nif].len == MAX_PKT_BURST))
 		return NULL;
 
 	len_of_mbuf = dpc->wmbufs[nif].len;
 	m = dpc->wmbufs[nif].m_table[len_of_mbuf];
-	
+
 	/* retrieve the right write offset */
 	ptr = (void *)rte_pktmbuf_mtod(m, struct ether_hdr *);
 	m->pkt_len = m->data_len = pktsize;
@@ -300,10 +300,10 @@ dpdk_get_wptr(struct mtcp_thread_context *ctxt, int nif, uint16_t pktsize)
 #ifdef NETSTAT
 	mtcp->nstat.tx_bytes[nif] += pktsize + 24;
 #endif
-	
+
 	/* increment the len_of_mbuf var */
 	dpc->wmbufs[nif].len = len_of_mbuf + 1;
-	
+
 	return (uint8_t *)ptr;
 }
 /*----------------------------------------------------------------------------*/
@@ -347,7 +347,7 @@ dpdk_get_rptr(struct mtcp_thread_context *ctxt, int ifidx, int index, uint16_t *
 	struct rte_mbuf *m;
 	uint8_t *pktbuf;
 
-	dpc = (struct dpdk_private_context *) ctxt->io_private_context;	
+	dpc = (struct dpdk_private_context *) ctxt->io_private_context;
 
 
 	m = dpc->pkts_burst[index];
@@ -375,7 +375,7 @@ dpdk_destroy_handle(struct mtcp_thread_context *ctxt)
 	struct dpdk_private_context *dpc;
 	int i;
 
-	dpc = (struct dpdk_private_context *) ctxt->io_private_context;	
+	dpc = (struct dpdk_private_context *) ctxt->io_private_context;
 
 	/* free wmbufs */
 	for (i = 0; i < num_devices_attached; i++)
@@ -451,19 +451,19 @@ dpdk_enable_fdir(int portid, uint8_t is_master)
 	struct rte_fdir_masks fdir_masks;
 	struct rte_fdir_filter fdir_filter;
 	int ret;
-	
+
 	memset(&fdir_filter, 0, sizeof(struct rte_fdir_filter));
 	fdir_filter.iptype = RTE_FDIR_IPTYPE_IPV4;
 	fdir_filter.l4type = RTE_FDIR_L4TYPE_TCP;
 	fdir_filter.ip_dst.ipv4_addr = CONFIG.eths[portid].ip_addr;
-	
+
 	if (is_master) {
 		memset(&fdir_masks, 0, sizeof(struct rte_fdir_masks));
 		fdir_masks.src_ipv4_mask = 0x0;
 		fdir_masks.dst_ipv4_mask = 0xFFFFFFFF;
 		fdir_masks.src_port_mask = 0x0;
 		fdir_masks.dst_port_mask = 0x0;
-		
+
 		/*
 		 * enable the following if the filter is IP-only
 		 * (non-TCP, non-UDP)
@@ -518,9 +518,9 @@ dpdk_load_module(void)
 						   rte_pktmbuf_init, NULL,
 						   rte_socket_id(), 0);
 			if (pktmbuf_pool[rxlcore_id] == NULL)
-				rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");	
+				rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");
 		}
-		
+
 		/* Initialise each port */
 		for (portid = 0; portid < num_devices_attached; portid++) {
 			/* init port */
@@ -530,7 +530,7 @@ dpdk_load_module(void)
 			if (ret < 0)
 				rte_exit(EXIT_FAILURE, "Cannot configure device: err=%d, port=%u\n",
 					 ret, (unsigned) portid);
-			
+
 			/* init one RX queue per CPU */
 			fflush(stdout);
 #ifdef DEBUG
@@ -541,31 +541,31 @@ dpdk_load_module(void)
 							     rte_eth_dev_socket_id(portid), &rx_conf,
 							     pktmbuf_pool[rxlcore_id]);
 				if (ret < 0)
-					rte_exit(EXIT_FAILURE, 
+					rte_exit(EXIT_FAILURE,
 						 "rte_eth_rx_queue_setup:err=%d, port=%u, queueid: %d\n",
 						 ret, (unsigned) portid, rxlcore_id);
 			}
-			
+
 			/* init one TX queue on each port per CPU (this is redundant for this app) */
 			fflush(stdout);
 			for (rxlcore_id = 0; rxlcore_id < CONFIG.num_cores; rxlcore_id++) {
 				ret = rte_eth_tx_queue_setup(portid, rxlcore_id, nb_txd,
 							     rte_eth_dev_socket_id(portid), &tx_conf);
 				if (ret < 0)
-					rte_exit(EXIT_FAILURE, 
+					rte_exit(EXIT_FAILURE,
 						 "rte_eth_tx_queue_setup:err=%d, port=%u, queueid: %d\n",
 						 ret, (unsigned) portid, rxlcore_id);
 			}
-			
+
 			/* Start device */
 			ret = rte_eth_dev_start(portid);
 			if (ret < 0)
 				rte_exit(EXIT_FAILURE, "rte_eth_dev_start:err=%d, port=%u\n",
 					 ret, (unsigned) portid);
-			
+
 			printf("done: \n");
 			rte_eth_promiscuous_enable(portid);
-			
+
 #ifdef DEBUG
 			printf("Port %u, MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
 			       (unsigned) portid,
@@ -593,7 +593,7 @@ dpdk_load_module(void)
                 for (portid = 0; portid < num_devices_attached; portid++)
 			dpdk_enable_fdir(portid, CONFIG.multi_process_is_master);
 	}
-	
+
 	check_all_ports_link_status(num_devices_attached, 0xFFFFFFFF);
 }
 /*----------------------------------------------------------------------------*/

@@ -20,7 +20,7 @@
 /*----------------------------------------------------------------------------*/
 char *event_str[] = {"NONE", "IN", "PRI", "OUT", "ERR", "HUP", "RDHUP"};
 /*----------------------------------------------------------------------------*/
-char * 
+char *
 EventToString(uint32_t event)
 {
 	switch (event) {
@@ -48,7 +48,7 @@ EventToString(uint32_t event)
 		default:
 			assert(0);
 	}
-	
+
 	assert(0);
 	return NULL;
 }
@@ -76,7 +76,7 @@ CreateEventQueue(int size)
 	return eq;
 }
 /*----------------------------------------------------------------------------*/
-void 
+void
 DestroyEventQueue(struct event_queue *eq)
 {
 	if (eq->events)
@@ -85,7 +85,7 @@ DestroyEventQueue(struct event_queue *eq)
 	free(eq);
 }
 /*----------------------------------------------------------------------------*/
-int 
+int
 mtcp_epoll_create(mctx_t mctx, int size)
 {
 	mtcp_manager_t mtcp = g_mtcp[mctx->cpu];
@@ -127,7 +127,7 @@ mtcp_epoll_create(mctx_t mctx, int size)
 		return -1;
 	}
 
-	TRACE_EPOLL("epoll structure of size %d created.\n", ep->size);
+	TRACE_EPOLL("epoll structure of size %d created.\n", size);
 
 	mtcp->ep = ep;
 	epsocket->ep = ep;
@@ -142,7 +142,7 @@ mtcp_epoll_create(mctx_t mctx, int size)
 	return epsocket->id;
 }
 /*----------------------------------------------------------------------------*/
-int 
+int
 CloseEpollSocket(mctx_t mctx, int epid)
 {
 	mtcp_manager_t mtcp;
@@ -176,8 +176,8 @@ CloseEpollSocket(mctx_t mctx, int epid)
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
-static int 
-RaisePendingStreamEvents(mtcp_manager_t mtcp, 
+static int
+RaisePendingStreamEvents(mtcp_manager_t mtcp,
 		struct mtcp_epoll *ep, socket_map_t socket)
 {
 	tcp_stream *stream = socket->stream;
@@ -187,7 +187,7 @@ RaisePendingStreamEvents(mtcp_manager_t mtcp,
 	if (stream->state < TCP_ST_ESTABLISHED)
 		return -1;
 
-	TRACE_EPOLL("Stream %d at state %s\n", 
+	TRACE_EPOLL("Stream %d at state %s\n",
 			stream->id, TCPStateToString(stream));
 	/* if there are payloads already read before epoll registration */
 	/* generate read event */
@@ -205,7 +205,7 @@ RaisePendingStreamEvents(mtcp_manager_t mtcp,
 	/* same thing to the write event */
 	if (socket->epoll & MTCP_EPOLLOUT) {
 		struct tcp_send_vars *sndvar = stream->sndvar;
-		if (!sndvar->sndbuf || 
+		if (!sndvar->sndbuf ||
 				(sndvar->sndbuf && sndvar->sndbuf->len < sndvar->snd_wnd)) {
 			if (!(socket->events & MTCP_EPOLLOUT)) {
 				TRACE_EPOLL("Socket %d: Adding write event\n", socket->id);
@@ -217,8 +217,8 @@ RaisePendingStreamEvents(mtcp_manager_t mtcp,
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
-int 
-mtcp_epoll_ctl(mctx_t mctx, int epid, 
+int
+mtcp_epoll_ctl(mctx_t mctx, int epid,
 		int op, int sockid, struct mtcp_epoll_event *event)
 {
 	mtcp_manager_t mtcp;
@@ -272,8 +272,8 @@ mtcp_epoll_ctl(mctx_t mctx, int epid,
 		socket->ep_data = event->data;
 		socket->epoll = events;
 
-		TRACE_EPOLL("Adding epoll socket %d(type %d) ET: %u, IN: %u, OUT: %u\n", 
-				socket->id, socket->socktype, socket->epoll & MTCP_EPOLLET, 
+		TRACE_EPOLL("Adding epoll socket %d(type %d) ET: %u, IN: %u, OUT: %u\n",
+				socket->id, socket->socktype, socket->epoll & MTCP_EPOLLET,
 				socket->epoll & MTCP_EPOLLIN, socket->epoll & MTCP_EPOLLOUT);
 
 		if (socket->socktype == MTCP_SOCK_STREAM) {
@@ -312,8 +312,8 @@ mtcp_epoll_ctl(mctx_t mctx, int epid,
 	return 0;
 }
 /*----------------------------------------------------------------------------*/
-int 
-mtcp_epoll_wait(mctx_t mctx, int epid, 
+int
+mtcp_epoll_wait(mctx_t mctx, int epid,
 		struct mtcp_epoll_event *events, int maxevents, int timeout)
 {
 	mtcp_manager_t mtcp;
@@ -400,12 +400,12 @@ wait:
 
 			//deadline.tv_sec = mtcp->cur_tv.tv_sec;
 			//deadline.tv_nsec = (mtcp->cur_tv.tv_usec + timeout * 1000) * 1000;
-			ret = pthread_cond_timedwait(&ep->epoll_cond, 
+			ret = pthread_cond_timedwait(&ep->epoll_cond,
 					&ep->epoll_lock, &deadline);
 			if (ret && ret != ETIMEDOUT) {
 				/* errno set by pthread_cond_timedwait() */
 				pthread_mutex_unlock(&ep->epoll_lock);
-				TRACE_ERROR("pthread_cond_timedwait failed. ret: %d, error: %s\n", 
+				TRACE_ERROR("pthread_cond_timedwait failed. ret: %d, error: %s\n",
 						ret, strerror(errno));
 				return -1;
 			}
@@ -415,7 +415,7 @@ wait:
 			if (ret) {
 				/* errno set by pthread_cond_wait() */
 				pthread_mutex_unlock(&ep->epoll_lock);
-				TRACE_ERROR("pthread_cond_wait failed. ret: %d, error: %s\n", 
+				TRACE_ERROR("pthread_cond_wait failed. ret: %d, error: %s\n",
 						ret, strerror(errno));
 				return -1;
 			}
@@ -429,9 +429,9 @@ wait:
 			errno = EINTR;
 			return -1;
 		}
-	
+
 	}
-	
+
 	/* fetch events from the user event queue */
 	cnt = 0;
 	num_events = eq->num_events;
@@ -450,14 +450,14 @@ wait:
 			assert(eq->events[eq->start].sockid >= 0);
 
 			TRACE_EPOLL("Socket %d: Handled event. event: %s, "
-					"start: %u, end: %u, num: %u\n", 
-					event_socket->id, 
-					EventToString(eq->events[eq->start].ev.events), 
+					"start: %u, end: %u, num: %u\n",
+					event_socket->id,
+					EventToString(eq->events[eq->start].ev.events),
 					eq->start, eq->end, eq->num_events);
 			ep->stat.handled++;
 		} else {
-			TRACE_EPOLL("Socket %d: event %s invalidated.\n", 
-					eq->events[eq->start].sockid, 
+			TRACE_EPOLL("Socket %d: event %s invalidated.\n",
+					eq->events[eq->start].sockid,
 					EventToString(eq->events[eq->start].ev.events));
 			ep->stat.invalidated++;
 		}
@@ -488,14 +488,14 @@ wait:
 			assert(eq->events[eq->start].sockid >= 0);
 
 			TRACE_EPOLL("Socket %d: Handled event. event: %s, "
-					"start: %u, end: %u, num: %u\n", 
-					event_socket->id, 
-					EventToString(eq->events[eq->start].ev.events), 
+					"start: %u, end: %u, num: %u\n",
+					event_socket->id,
+					EventToString(eq->events[eq->start].ev.events),
 					eq->start, eq->end, eq->num_events);
 			ep->stat.handled++;
 		} else {
-			TRACE_EPOLL("Socket %d: event %s invalidated.\n", 
-					eq->events[eq->start].sockid, 
+			TRACE_EPOLL("Socket %d: event %s invalidated.\n",
+					eq->events[eq->start].sockid,
 					EventToString(eq->events[eq->start].ev.events));
 			ep->stat.invalidated++;
 		}
@@ -516,8 +516,8 @@ wait:
 	return cnt;
 }
 /*----------------------------------------------------------------------------*/
-inline int 
-AddEpollEvent(struct mtcp_epoll *ep, 
+inline int
+AddEpollEvent(struct mtcp_epoll *ep,
 		int queue_type, socket_map_t socket, uint32_t event)
 {
 	struct event_queue *eq;
@@ -525,7 +525,7 @@ AddEpollEvent(struct mtcp_epoll *ep,
 
 	if (!ep || !socket || !event)
 		return -1;
-	
+
 	ep->stat.issued++;
 
 	if (socket->events & event) {
@@ -545,7 +545,7 @@ AddEpollEvent(struct mtcp_epoll *ep,
 	}
 
 	if (eq->num_events >= eq->size) {
-		TRACE_ERROR("Exceeded epoll event queue! num_events: %d, size: %d\n", 
+		TRACE_ERROR("Exceeded epoll event queue! num_events: %d, size: %d\n",
 				eq->num_events, eq->size);
 		if (queue_type == USR_EVENT_QUEUE)
 			pthread_mutex_unlock(&ep->epoll_lock);
@@ -566,8 +566,8 @@ AddEpollEvent(struct mtcp_epoll *ep,
 
 #if 0
 	TRACE_EPOLL("Socket %d New event: %s, start: %u, end: %u, num: %u\n",
-			ep->events[index].sockid, 
-			EventToString(ep->events[index].ev.events), 
+			ep->events[index].sockid,
+			EventToString(ep->events[index].ev.events),
 			ep->start, ep->end, ep->num_events);
 #endif
 
