@@ -71,7 +71,7 @@ GenerateTCPTimestamp(tcp_stream *cur_stream, uint8_t *tcpopt, uint32_t cur_ts)
 }
 /*----------------------------------------------------------------------------*/
 static inline void
-GenerateTCPOptions(tcp_stream *cur_stream, uint32_t cur_ts, 
+GenerateTCPOptions(tcp_stream *cur_stream, uint32_t cur_ts,
 		uint8_t flags, uint8_t *tcpopt, uint16_t optlen)
 {
 	int i = 0;
@@ -133,10 +133,10 @@ GenerateTCPOptions(tcp_stream *cur_stream, uint32_t cur_ts,
 }
 /*----------------------------------------------------------------------------*/
 int
-SendTCPPacketStandalone(struct mtcp_manager *mtcp, 
-		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport, 
-		uint32_t seq, uint32_t ack_seq, uint16_t window, uint8_t flags, 
-		uint8_t *payload, uint16_t payloadlen, 
+SendTCPPacketStandalone(struct mtcp_manager *mtcp,
+		uint32_t saddr, uint16_t sport, uint32_t daddr, uint16_t dport,
+		uint32_t seq, uint32_t ack_seq, uint16_t window, uint8_t flags,
+		uint8_t *payload, uint16_t payloadlen,
 		uint32_t cur_ts, uint32_t echo_ts)
 {
 	struct tcphdr *tcph;
@@ -151,7 +151,7 @@ SendTCPPacketStandalone(struct mtcp_manager *mtcp,
 		return ERROR;
 	}
 
-	tcph = (struct tcphdr *)IPOutputStandalone(mtcp, 0, 
+	tcph = (struct tcphdr *)IPOutputStandalone(mtcp, 0,
 			saddr, daddr, TCP_HEADER_LEN + optlen + payloadlen);
 	if (tcph == NULL) {
 		return ERROR;
@@ -195,7 +195,7 @@ SendTCPPacketStandalone(struct mtcp_manager *mtcp,
 	}
 
 #if TCP_CALCULATE_CHECKSUM
-	tcph->check = TCPCalcChecksum((uint16_t *)tcph, 
+	tcph->check = TCPCalcChecksum((uint16_t *)tcph,
 			TCP_HEADER_LEN + optlen + payloadlen, saddr, daddr);
 #endif
 
@@ -207,7 +207,7 @@ SendTCPPacketStandalone(struct mtcp_manager *mtcp,
 }
 /*----------------------------------------------------------------------------*/
 int
-SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream, 
+SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 		uint32_t cur_ts, uint8_t flags, uint8_t *payload, uint16_t payloadlen)
 {
 	struct tcphdr *tcph;
@@ -221,7 +221,7 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 		return ERROR;
 	}
 
-	tcph = (struct tcphdr *)IPOutput(mtcp, cur_stream, 
+	tcph = (struct tcphdr *)IPOutput(mtcp, cur_stream,
 			TCP_HEADER_LEN + optlen + payloadlen);
 	if (tcph == NULL) {
 		return -2;
@@ -235,11 +235,11 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 		tcph->syn = TRUE;
 		if (cur_stream->snd_nxt != cur_stream->sndvar->iss) {
 			TRACE_DBG("Stream %d: weird SYN sequence. "
-					"snd_nxt: %u, iss: %u\n", cur_stream->id, 
+					"snd_nxt: %u, iss: %u\n", cur_stream->id,
 					cur_stream->snd_nxt, cur_stream->sndvar->iss);
 		}
 #if 0
-		TRACE_FIN("Stream %d: Sending SYN. seq: %u, ack_seq: %u\n", 
+		TRACE_FIN("Stream %d: Sending SYN. seq: %u, ack_seq: %u\n",
 				cur_stream->id, cur_stream->snd_nxt, cur_stream->rcv_nxt);
 #endif
 	}
@@ -253,20 +253,20 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 	if (flags & TCP_FLAG_WACK) {
 		tcph->seq = htonl(cur_stream->snd_nxt - 1);
 		TRACE_CLWND("%u Sending ACK to get new window advertisement. "
-				"seq: %u, peer_wnd: %u, snd_nxt - snd_una: %u\n", 
+				"seq: %u, peer_wnd: %u, snd_nxt - snd_una: %u\n",
 				cur_stream->id,
-				cur_stream->snd_nxt - 1, cur_stream->sndvar->peer_wnd, 
+				cur_stream->snd_nxt - 1, cur_stream->sndvar->peer_wnd,
 				cur_stream->snd_nxt - cur_stream->sndvar->snd_una);
 	} else if (flags & TCP_FLAG_FIN) {
 		tcph->fin = TRUE;
-		
+
 		if (cur_stream->sndvar->fss == 0) {
-			TRACE_ERROR("Stream %u: not fss set. closed: %u\n", 
+			TRACE_ERROR("Stream %u: not fss set. closed: %u\n",
 					cur_stream->id, cur_stream->closed);
 		}
 		tcph->seq = htonl(cur_stream->sndvar->fss);
 		cur_stream->sndvar->is_fin_sent = TRUE;
-		TRACE_FIN("Stream %d: Sending FIN. seq: %u, ack_seq: %u\n", 
+		TRACE_FIN("Stream %d: Sending FIN. seq: %u, ack_seq: %u\n",
 				cur_stream->id, cur_stream->snd_nxt, cur_stream->rcv_nxt);
 	} else {
 		tcph->seq = htonl(cur_stream->snd_nxt);
@@ -293,9 +293,9 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 		cur_stream->need_wnd_adv = TRUE;
 	}
 
-	GenerateTCPOptions(cur_stream, cur_ts, flags, 
+	GenerateTCPOptions(cur_stream, cur_ts, flags,
 			(uint8_t *)tcph + TCP_HEADER_LEN, optlen);
-	
+
 	tcph->doff = (TCP_HEADER_LEN + optlen) >> 2;
 	// copy payload if exist
 	if (payloadlen > 0) {
@@ -303,8 +303,8 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 	}
 
 #if TCP_CALCULATE_CHECKSUM
-	tcph->check = TCPCalcChecksum((uint16_t *)tcph, 
-			TCP_HEADER_LEN + optlen + payloadlen, 
+	tcph->check = TCPCalcChecksum((uint16_t *)tcph,
+			TCP_HEADER_LEN + optlen + payloadlen,
 			cur_stream->saddr, cur_stream->daddr);
 #endif
 
@@ -317,14 +317,14 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 
 	if (payloadlen > 0) {
 		if (cur_stream->state > TCP_ST_ESTABLISHED) {
-			TRACE_FIN("Payload after ESTABLISHED: length: %d, snd_nxt: %u\n", 
+			TRACE_FIN("Payload after ESTABLISHED: length: %d, snd_nxt: %u\n",
 					payloadlen, cur_stream->snd_nxt);
 		}
 
 		/* update retransmission timer if have payload */
 		cur_stream->sndvar->ts_rto = cur_ts + cur_stream->sndvar->rto;
 		TRACE_RTO("Updating retransmission timer. "
-				"cur_ts: %u, rto: %u, ts_rto: %u\n", 
+				"cur_ts: %u, rto: %u, ts_rto: %u\n",
 				cur_ts, cur_stream->sndvar->rto, cur_stream->sndvar->ts_rto);
 		AddtoRTOList(mtcp, cur_stream);
 	}
@@ -362,8 +362,8 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 
 		if (TCP_SEQ_LT(seq, sndvar->sndbuf->head_seq)) {
 			TRACE_ERROR("Stream %d: Invalid sequence to send. "
-					"state: %s, seq: %u, head_seq: %u.\n", 
-					cur_stream->id, TCPStateToString(cur_stream), 
+					"state: %s, seq: %u, head_seq: %u.\n",
+					cur_stream->id, TCPStateToString(cur_stream),
 					seq, sndvar->sndbuf->head_seq);
 			assert(0);
 			break;
@@ -371,13 +371,13 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 		buffered_len = sndvar->sndbuf->head_seq + sndvar->sndbuf->len - seq;
 		if (cur_stream->state > TCP_ST_ESTABLISHED) {
 			TRACE_FIN("head_seq: %u, len: %u, seq: %u, "
-					"buffered_len: %u\n", sndvar->sndbuf->head_seq, 
+					"buffered_len: %u\n", sndvar->sndbuf->head_seq,
 					sndvar->sndbuf->len, seq, buffered_len);
 		}
 		if (buffered_len == 0)
 			break;
 
-		data = sndvar->sndbuf->head + 
+		data = sndvar->sndbuf->head +
 				(seq - sndvar->sndbuf->head_seq);
 
 		if (buffered_len > maxlen) {
@@ -385,7 +385,7 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 		} else {
 			len = buffered_len;
 		}
-		
+
 		if (len <= 0)
 			break;
 
@@ -399,7 +399,7 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 			if (seq - sndvar->snd_una + len > sndvar->peer_wnd) {
 #if 0
 				TRACE_CLWND("Full peer window. "
-						"peer_wnd: %u, (snd_nxt-snd_una): %u\n", 
+						"peer_wnd: %u, (snd_nxt-snd_una): %u\n",
 						sndvar->peer_wnd, seq - sndvar->snd_una);
 #endif
 				if (TS_TO_MSEC(cur_ts - sndvar->ts_lastack_sent) > 500) {
@@ -408,8 +408,8 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 			}
 			return -3;
 		}
-	
-		sndlen = SendTCPPacket(mtcp, cur_stream, cur_ts, 
+
+		sndlen = SendTCPPacket(mtcp, cur_stream, cur_ts,
 				TCP_FLAG_ACK, data, len);
 		if (sndlen < 0) {
 			return sndlen;
@@ -420,7 +420,7 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 	return packets;
 }
 /*----------------------------------------------------------------------------*/
-static inline int 
+static inline int
 SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 {
 	struct tcp_send_vars *sndvar = cur_stream->sndvar;
@@ -433,7 +433,7 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 	} else if (cur_stream->state == TCP_ST_SYN_RCVD) {
 		/* Send SYN/ACK here */
 		cur_stream->snd_nxt = sndvar->iss;
-		ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
+		ret = SendTCPPacket(mtcp, cur_stream, cur_ts,
 				TCP_FLAG_SYN | TCP_FLAG_ACK, NULL, 0);
 
 	} else if (cur_stream->state == TCP_ST_ESTABLISHED) {
@@ -450,7 +450,7 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 			ret = -1;
 		} else {
 			/* Send FIN/ACK here */
-			ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
+			ret = SendTCPPacket(mtcp, cur_stream, cur_ts,
 					TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 		}
 	} else if (cur_stream->state == TCP_ST_FIN_WAIT_1) {
@@ -459,7 +459,7 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 			ret = -1;
 		} else {
 			/* Send FIN/ACK here */
-			ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
+			ret = SendTCPPacket(mtcp, cur_stream, cur_ts,
 					TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 		}
 
@@ -471,15 +471,15 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 		if (sndvar->is_fin_sent) {
 			/* if the sequence is for FIN, send FIN */
 			if (cur_stream->snd_nxt == sndvar->fss) {
-				ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
+				ret = SendTCPPacket(mtcp, cur_stream, cur_ts,
 						TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 			} else {
-				ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
+				ret = SendTCPPacket(mtcp, cur_stream, cur_ts,
 						TCP_FLAG_ACK, NULL, 0);
 			}
 		} else {
 			/* if FIN is not sent, send fin with ack */
-			ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
+			ret = SendTCPPacket(mtcp, cur_stream, cur_ts,
 					TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 		}
 
@@ -489,7 +489,7 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 
 	} else if (cur_stream->state == TCP_ST_CLOSED) {
 		/* Send RST here */
-		TRACE_DBG("Stream %d: Try sending RST (TCP_ST_CLOSED)\n", 
+		TRACE_DBG("Stream %d: Try sending RST (TCP_ST_CLOSED)\n",
 				cur_stream->id);
 		/* first flush the data and ack */
 		if (sndvar->on_send_list || sndvar->on_ack_list) {
@@ -505,8 +505,8 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 	return ret;
 }
 /*----------------------------------------------------------------------------*/
-inline int 
-WriteTCPControlList(mtcp_manager_t mtcp, 
+inline int
+WriteTCPControlList(mtcp_manager_t mtcp,
 		struct mtcp_sender *sender, uint32_t cur_ts, int thresh)
 {
 	tcp_stream *cur_stream;
@@ -524,7 +524,7 @@ WriteTCPControlList(mtcp_manager_t mtcp,
 		if (++cnt > thresh)
 			break;
 
-		TRACE_LOOP("Inside control loop. cnt: %u, stream: %d\n", 
+		TRACE_LOOP("Inside control loop. cnt: %u, stream: %d\n",
 				cnt, cur_stream->id);
 		next = TAILQ_NEXT(cur_stream, sndvar->control_link);
 
@@ -536,7 +536,7 @@ WriteTCPControlList(mtcp_manager_t mtcp,
 			//TRACE_DBG("Stream %u: Sending control packet\n", cur_stream->id);
 			ret = SendControlPacket(mtcp, cur_stream, cur_ts);
 			if (ret < 0) {
-				TAILQ_INSERT_HEAD(&sender->control_list, 
+				TAILQ_INSERT_HEAD(&sender->control_list,
 						cur_stream, sndvar->control_link);
 				cur_stream->sndvar->on_control_list = TRUE;
 				sender->control_list_cnt++;
@@ -547,7 +547,7 @@ WriteTCPControlList(mtcp_manager_t mtcp,
 			TRACE_ERROR("Stream %d: not on control list.\n", cur_stream->id);
 		}
 
-		if (cur_stream == last) 
+		if (cur_stream == last)
 			break;
 		cur_stream = next;
 	}
@@ -555,8 +555,8 @@ WriteTCPControlList(mtcp_manager_t mtcp,
 	return cnt;
 }
 /*----------------------------------------------------------------------------*/
-inline int 
-WriteTCPDataList(mtcp_manager_t mtcp, 
+inline int
+WriteTCPDataList(mtcp_manager_t mtcp,
 		struct mtcp_sender *sender, uint32_t cur_ts, int thresh)
 {
 	tcp_stream *cur_stream;
@@ -572,7 +572,7 @@ WriteTCPDataList(mtcp_manager_t mtcp,
 		if (++cnt > thresh)
 			break;
 
-		TRACE_LOOP("Inside send loop. cnt: %u, stream: %d\n", 
+		TRACE_LOOP("Inside send loop. cnt: %u, stream: %d\n",
 				cnt, cur_stream->id);
 		next = TAILQ_NEXT(cur_stream, sndvar->send_link);
 
@@ -590,12 +590,12 @@ WriteTCPDataList(mtcp_manager_t mtcp,
 				} else {
 					ret = FlushTCPSendingBuffer(mtcp, cur_stream, cur_ts);
 				}
-			} else if (cur_stream->state == TCP_ST_CLOSE_WAIT || 
-					cur_stream->state == TCP_ST_FIN_WAIT_1 || 
+			} else if (cur_stream->state == TCP_ST_CLOSE_WAIT ||
+					cur_stream->state == TCP_ST_FIN_WAIT_1 ||
 					cur_stream->state == TCP_ST_LAST_ACK) {
 				ret = FlushTCPSendingBuffer(mtcp, cur_stream, cur_ts);
 			} else {
-				TRACE_DBG("Stream %d: on_send_list at state %s\n", 
+				TRACE_DBG("Stream %d: on_send_list at state %s\n",
 						cur_stream->id, TCPStateToString(cur_stream));
 #if DUMP_STREAM
 				DumpStream(mtcp, cur_stream);
@@ -637,7 +637,7 @@ WriteTCPDataList(mtcp_manager_t mtcp,
 #endif
 		}
 
-		if (cur_stream == last) 
+		if (cur_stream == last)
 			break;
 		cur_stream = next;
 	}
@@ -645,8 +645,8 @@ WriteTCPDataList(mtcp_manager_t mtcp,
 	return cnt;
 }
 /*----------------------------------------------------------------------------*/
-inline int 
-WriteTCPACKList(mtcp_manager_t mtcp, 
+inline int
+WriteTCPACKList(mtcp_manager_t mtcp,
 		struct mtcp_sender *sender, uint32_t cur_ts, int thresh)
 {
 	tcp_stream *cur_stream;
@@ -670,16 +670,16 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 			/* this list is only to ack the data packets */
 			/* if the ack is not data ack, then it will not process here */
 			to_ack = FALSE;
-			if (cur_stream->state == TCP_ST_ESTABLISHED || 
-					cur_stream->state == TCP_ST_CLOSE_WAIT || 
-					cur_stream->state == TCP_ST_FIN_WAIT_1 || 
-					cur_stream->state == TCP_ST_FIN_WAIT_2 || 
+			if (cur_stream->state == TCP_ST_ESTABLISHED ||
+					cur_stream->state == TCP_ST_CLOSE_WAIT ||
+					cur_stream->state == TCP_ST_FIN_WAIT_1 ||
+					cur_stream->state == TCP_ST_FIN_WAIT_2 ||
 					cur_stream->state == TCP_ST_TIME_WAIT) {
-				/* TIMEWAIT is possible since the ack is queued 
+				/* TIMEWAIT is possible since the ack is queued
 				   at FIN_WAIT_2 */
 				if (cur_stream->rcvvar->rcvbuf) {
-					if (TCP_SEQ_LEQ(cur_stream->rcv_nxt, 
-								cur_stream->rcvvar->rcvbuf->head_seq + 
+					if (TCP_SEQ_LEQ(cur_stream->rcv_nxt,
+								cur_stream->rcvvar->rcvbuf->head_seq +
 								cur_stream->rcvvar->rcvbuf->merged_len)) {
 						to_ack = TRUE;
 					}
@@ -687,9 +687,9 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 			} else {
 				TRACE_DBG("Stream %u (%s): "
 						"Try sending ack at not proper state. "
-						"seq: %u, ack_seq: %u, on_control_list: %u\n", 
-						cur_stream->id, TCPStateToString(cur_stream), 
-						cur_stream->snd_nxt, cur_stream->rcv_nxt, 
+						"seq: %u, ack_seq: %u, on_control_list: %u\n",
+						cur_stream->id, TCPStateToString(cur_stream),
+						cur_stream->snd_nxt, cur_stream->rcv_nxt,
 						cur_stream->sndvar->on_control_list);
 #ifdef DUMP_STREAM
 				DumpStream(mtcp, cur_stream);
@@ -699,7 +699,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 			if (to_ack) {
 				/* send the queued ack packets */
 				while (cur_stream->sndvar->ack_cnt > 0) {
-					ret = SendTCPPacket(mtcp, cur_stream, 
+					ret = SendTCPPacket(mtcp, cur_stream,
 							cur_ts, TCP_FLAG_ACK, NULL, 0);
 					if (ret < 0) {
 						/* since there is no available write buffer, break */
@@ -711,7 +711,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 				/* if is_wack is set, send packet to get window advertisement */
 				if (cur_stream->sndvar->is_wack) {
 					cur_stream->sndvar->is_wack = FALSE;
-					ret = SendTCPPacket(mtcp, cur_stream, 
+					ret = SendTCPPacket(mtcp, cur_stream,
 							cur_ts, TCP_FLAG_ACK | TCP_FLAG_WACK, NULL, 0);
 					if (ret < 0) {
 						/* since there is no available write buffer, break */
@@ -743,7 +743,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 			TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
 			sender->ack_list_cnt--;
 #ifdef DUMP_STREAM
-			thread_printf(mtcp, mtcp->log_fp, 
+			thread_printf(mtcp, mtcp->log_fp,
 					"Stream %u: not on ack list.\n", cur_stream->id);
 			DumpStream(mtcp, cur_stream);
 #endif
@@ -760,11 +760,13 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 inline struct mtcp_sender *
 GetSender(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 {
+
 	if (cur_stream->sndvar->nif_out < 0) {
 		return mtcp->g_sender;
 
 	} else if (cur_stream->sndvar->nif_out >= CONFIG.eths_num) {
-		TRACE_ERROR("(NEVER HAPPEN) Failed to find appropriate sender.\n");
+		TRACE_ERROR("(NEVER HAPPEN) Failed to find appropriate sender. nif_out %d >= eths_num %d \n",
+                    cur_stream->sndvar->nif_out, CONFIG.eths_num);
 		return NULL;
 
 	} else {
@@ -772,7 +774,7 @@ GetSender(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 	}
 }
 /*----------------------------------------------------------------------------*/
-inline void 
+inline void
 AddtoControlList(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 {
 #if TRY_SEND_BEFORE_QUEUE
@@ -790,7 +792,7 @@ AddtoControlList(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 			cur_stream->sndvar->on_control_list = TRUE;
 			TAILQ_INSERT_TAIL(&sender->control_list, cur_stream, sndvar->control_link);
 			sender->control_list_cnt++;
-			//TRACE_DBG("Stream %u: added to control list (cnt: %d)\n", 
+			//TRACE_DBG("Stream %u: added to control list (cnt: %d)\n",
 			//		cur_stream->id, sender->control_list_cnt);
 		}
 #if TRY_SEND_BEFORE_QUEUE
@@ -804,14 +806,14 @@ AddtoControlList(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 #endif
 }
 /*----------------------------------------------------------------------------*/
-inline void 
+inline void
 AddtoSendList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 {
 	struct mtcp_sender *sender = GetSender(mtcp, cur_stream);
 	assert(sender != NULL);
 
 	if(!cur_stream->sndvar->sndbuf) {
-		TRACE_ERROR("[%d] Stream %d: No send buffer available.\n", 
+		TRACE_ERROR("[%d] Stream %d: No send buffer available.\n",
 				mtcp->ctx->cpu,
 				cur_stream->id);
 		assert(0);
@@ -825,7 +827,7 @@ AddtoSendList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 	}
 }
 /*----------------------------------------------------------------------------*/
-inline void 
+inline void
 AddtoACKList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 {
 	struct mtcp_sender *sender = GetSender(mtcp, cur_stream);
@@ -838,7 +840,7 @@ AddtoACKList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 	}
 }
 /*----------------------------------------------------------------------------*/
-inline void 
+inline void
 RemoveFromControlList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 {
 	struct mtcp_sender *sender = GetSender(mtcp, cur_stream);
@@ -848,12 +850,12 @@ RemoveFromControlList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 		cur_stream->sndvar->on_control_list = FALSE;
 		TAILQ_REMOVE(&sender->control_list, cur_stream, sndvar->control_link);
 		sender->control_list_cnt--;
-		//TRACE_DBG("Stream %u: Removed from control list (cnt: %d)\n", 
+		//TRACE_DBG("Stream %u: Removed from control list (cnt: %d)\n",
 		//		cur_stream->id, sender->control_list_cnt);
 	}
 }
 /*----------------------------------------------------------------------------*/
-inline void 
+inline void
 RemoveFromSendList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 {
 	struct mtcp_sender *sender = GetSender(mtcp, cur_stream);
@@ -866,7 +868,7 @@ RemoveFromSendList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 	}
 }
 /*----------------------------------------------------------------------------*/
-inline void 
+inline void
 RemoveFromACKList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 {
 	struct mtcp_sender *sender = GetSender(mtcp, cur_stream);
@@ -879,15 +881,15 @@ RemoveFromACKList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 	}
 }
 /*----------------------------------------------------------------------------*/
-inline void 
-EnqueueACK(mtcp_manager_t mtcp, 
+inline void
+EnqueueACK(mtcp_manager_t mtcp,
 		tcp_stream *cur_stream, uint32_t cur_ts, uint8_t opt)
 {
-	if (!(cur_stream->state == TCP_ST_ESTABLISHED || 
-			cur_stream->state == TCP_ST_CLOSE_WAIT || 
-			cur_stream->state == TCP_ST_FIN_WAIT_1 || 
+	if (!(cur_stream->state == TCP_ST_ESTABLISHED ||
+			cur_stream->state == TCP_ST_CLOSE_WAIT ||
+			cur_stream->state == TCP_ST_FIN_WAIT_1 ||
 			cur_stream->state == TCP_ST_FIN_WAIT_2)) {
-		TRACE_DBG("Stream %u: Enqueueing ack at state %s\n", 
+		TRACE_DBG("Stream %u: Enqueueing ack at state %s\n",
 				cur_stream->id, TCPStateToString(cur_stream));
 	}
 
@@ -905,7 +907,7 @@ EnqueueACK(mtcp_manager_t mtcp,
 	AddtoACKList(mtcp, cur_stream);
 }
 /*----------------------------------------------------------------------------*/
-inline void 
+inline void
 DumpControlList(mtcp_manager_t mtcp, struct mtcp_sender *sender)
 {
 	tcp_stream *stream;

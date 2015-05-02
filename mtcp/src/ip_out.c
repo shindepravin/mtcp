@@ -24,16 +24,16 @@ GetOutputInterface(uint32_t daddr)
 
 	if (nif < 0) {
 		uint8_t *da = (uint8_t *)&daddr;
-		TRACE_ERROR("[WARNING] No route to %u.%u.%u.%u\n", 
+		TRACE_ERROR("[WARNING] No route to %u.%u.%u.%u\n",
 				da[0], da[1], da[2], da[3]);
 		assert(0);
 	}
-	
+
 	return nif;
 }
 /*----------------------------------------------------------------------------*/
 uint8_t *
-IPOutputStandalone(struct mtcp_manager *mtcp, 
+IPOutputStandalone(struct mtcp_manager *mtcp,
 		uint16_t ip_id, uint32_t saddr, uint32_t daddr, uint16_t tcplen)
 {
 	struct iphdr *iph;
@@ -55,8 +55,8 @@ IPOutputStandalone(struct mtcp_manager *mtcp,
 		RequestARP(mtcp, daddr, nif, mtcp->cur_ts);
 		return NULL;
 	}
-	
-	iph = (struct iphdr *)EthernetOutput(mtcp, 
+
+	iph = (struct iphdr *)EthernetOutput(mtcp,
 			ETH_P_IP, nif, haddr, tcplen + IP_HEADER_LEN);
 	if (!iph) {
 		return NULL;
@@ -105,8 +105,8 @@ IPOutput(struct mtcp_manager *mtcp, tcp_stream *stream, uint16_t tcplen)
 		RequestARP(mtcp, stream->daddr, stream->sndvar->nif_out, mtcp->cur_ts);
 		return NULL;
 	}
-	
-	iph = (struct iphdr *)EthernetOutput(mtcp, ETH_P_IP, 
+
+	iph = (struct iphdr *)EthernetOutput(mtcp, ETH_P_IP,
 			stream->sndvar->nif_out, haddr, tcplen + IP_HEADER_LEN);
 	if (!iph) {
 		return NULL;
