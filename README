@@ -2,9 +2,9 @@
  README for mTCP
 ========================================================================
 
-mTCP is a highly scalable user-level TCP stack for multicore systems. 
-mTCP source code is distributed under the Modified BSD License. For 
-more detail, please refer to the LICENSE. The license term of io_engine 
+mTCP is a highly scalable user-level TCP stack for multicore systems.
+mTCP source code is distributed under the Modified BSD License. For
+more detail, please refer to the LICENSE. The license term of io_engine
 driver and ported applications may differ from the mTCP’s.
 
 ========================================================================
@@ -20,9 +20,9 @@ We require the following libraries to run mTCP.
   - For Debian/Ubuntu, try apt-get install linux-headers-$(uname -r)
 
 
-* We have modified the dpdk-2.0.0 package to export net_device stat data 
+* We have modified the dpdk-2.0.0 package to export net_device stat data
 to the OS. To achieve this, the dpdk-2.0.0/lib/librte_eal/linuxapp/igb_uio/
-directory was updated. We recommend using our package for DPDK installation. 
+directory was updated. We recommend using our package for DPDK installation.
 
 ========================================================================
  INCLUDED DIRECTORIES
@@ -74,7 +74,7 @@ mTCP can be prepared in two ways.
   - you may need to change the ip address in install.py:46
 
 3. make in io_engine/lib:
-   	   # make 
+   	   # make
   - check libps.a
 
 4. Setup mtcp library:
@@ -111,7 +111,7 @@ mTCP can be prepared in two ways.
    configuration. We tested the mTCP stack on Intel Xeon E5-2690
    (x86_64) machine with Intel 82599 Ethernet adapters (10G). We
    used the following steps in the setup.sh script for our setup:
-   
+
 	   - Press [9] to compile the package
       	   - Press [12] to install the driver
       	   - Press [16] to setup 1024 2MB hugepages
@@ -124,7 +124,7 @@ mTCP can be prepared in two ways.
 
 2. Next bring the dpdk-registered interfaces up. Please use the
    setup_iface_single_process.sh script file present in dpdk-2.0.0/tools/
-   directory for this purpose. Please change lines 49-51 to change the IP	
+   directory for this purpose. Please change lines 49-51 to change the IP
    address. Under default settings, run the script as:
    	   # ./setup_iface_single_process.sh 3
 
@@ -161,12 +161,54 @@ mTCP can be prepared in two ways.
 
 8. Run the applications!
 
+- TUNTAP VERSION -
+--------------------
+
+1. Setup mtcp library:
+   	   # ./configure --with-tuntap-lib=./tuntap
+	   # cd mtcp/src
+   	   # make
+  - check libmtcp.a in mtcp/lib
+  - check header files in mtcp/include
+
+2. make in util/:
+   	   # make
+
+3. make in apps/example:
+   	   # make
+  - check example binary files
+
+4. Check the configurations
+  - epserver.conf for server-side configuration
+    - Make sure that you are currently using only one port
+        (eg: "port = tap0")
+  - Also, this version is tested only with single core setup
+        (eg: "-N 1")
+  - Currently only epserver is tested
+
+5. Run the applications!
+    Example Run:
+
+To run server:
+```
+cd mtcp/apps/example
+sudo ./epserver ./ -N 1
+```
+And to run client::
+
+```
+wget http://192.168.123.1/epserver.conf
+```
+
+NOTE: The IP address of the server is hardcoded to "192.168.123.1" in
+`mtcp/src/io_module.c:SetInterfaceInfo()`.
+
 ========================================================================
  TESTED ENVIRONMENTS
 ========================================================================
 
-mTCP runs on Linux-based operating systems (2.6.x for PSIO) with generic 
-x86_64 CPUs, but to help evaluation, we provide our tested environments 
+mTCP runs on Linux-based operating systems (2.6.x for PSIO) with generic
+x86_64 CPUs, but to help evaluation, we provide our tested environments
 as follows.
 
 Intel Xeon E5-2690 octacore CPU @ 2.90 GHz
@@ -188,19 +230,19 @@ We tested the DPDK version (polling driver) with Linux-3.13.0 kernel.
 ========================================================================
 
 1. mTCP currently runs with fixed memory pools. That means, the size of
-   TCP receive and send buffers are fixed at the startup and does not 
-   increase dynamically. This could be performance limit to the large 
-   long-lived connections. Be sure to configure the buffer size 
+   TCP receive and send buffers are fixed at the startup and does not
+   increase dynamically. This could be performance limit to the large
+   long-lived connections. Be sure to configure the buffer size
    appropriately to your size of workload.
 
-2. The client side of mTCP supports mtcp_init_rss() to create an 
-   address pool that can be used to fetch available address space in 
-   O(1). To easily congest the server side, this function should be 
+2. The client side of mTCP supports mtcp_init_rss() to create an
+   address pool that can be used to fetch available address space in
+   O(1). To easily congest the server side, this function should be
    called at the application startup.
 
 3. mTCP currently supports only 1 listening socket per an mTCP thread.
 
-4. The supported socket options are limited for right now. Please refer 
+4. The supported socket options are limited for right now. Please refer
    to the mtcp/src/api.c for more detail.
 
 5. The counterpart of mTCP should enable TCP timestamp.
@@ -210,33 +252,33 @@ We tested the DPDK version (polling driver) with Linux-3.13.0 kernel.
 ========================================================================
 
 1. How can I quit the application?
-  - Use ^C to gracefully shutdown the application. Two consecutive 
+  - Use ^C to gracefully shutdown the application. Two consecutive
     ^C (separated by 1 sec) will force quit.
 
 2. My application keeps printing "No route to 0.0.0.0"
-  - Try to turn off your network-manager for xge*. The network manager 
+  - Try to turn off your network-manager for xge*. The network manager
     can override the IP configuration set by install.py in PSIO driver.
 
 3. Can I statically set the routing or arp table?
-  - Yes, mTCP allows static route and arp configuration. Go to the 
-    config directory and see sample_route.conf or sample_arp.conf. 
-    Copy and adapt it to your condition and link (ln -s) the config 
-    directory to the application directory. mTCP will find 
+  - Yes, mTCP allows static route and arp configuration. Go to the
+    config directory and see sample_route.conf or sample_arp.conf.
+    Copy and adapt it to your condition and link (ln -s) the config
+    directory to the application directory. mTCP will find
     config/route.conf and config/arp.conf for static configuration.
 
 ========================================================================
  CAUTION
 ========================================================================
 
-1. Do not remove I/O driver (ps_ixgbe/igb_uio) while running mTCP 
+1. Do not remove I/O driver (ps_ixgbe/igb_uio) while running mTCP
    applications. The application will panic!
 
-2. Use the ps_ixgbe/dpdk driver contained in this package, not the one 
+2. Use the ps_ixgbe/dpdk driver contained in this package, not the one
    from some other place (e.g., from io_engine github).
 
 ========================================================================
 
                    Contact: mtcp at list.ndsl.kaist.edu
-                             April 2, 2015. 
+                             April 2, 2015.
                  EunYoung Jeong <notav at ndsl.kaist.edu>
 		 M. Asim Jamshed <ajamshed at ndsl.kaist.edu>
