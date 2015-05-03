@@ -83,7 +83,10 @@ extern io_module_func dpdk_module_func;
 /* registered tuntap context */
 extern io_module_func tuntap_module_func;
 
+#ifndef DISABLE_TUNTAP
 void *init_tap_network(char *ifname, char *ipaddr, char *ipmask);
+#endif // DISABLE_TUNTAP
+
 
 /* Macro to assign IO module */
 #define AssignIOModule(m) {						\

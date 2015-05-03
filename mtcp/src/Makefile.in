@@ -4,6 +4,7 @@
 ### TARGET ###
 PS=@PSIO@
 DPDK=@DPDK@
+TUNTAP=@TUNTAP@
 MTCP_LIB_DIR=../lib
 MTCP_LIB=libmtcp.a
 MTCP_HDR_DIR=../include
@@ -48,6 +49,13 @@ DPDK_MACHINE_FLAGS = $(shell cat @DPDKLIBPATH@/include/cflags.txt)
 INC += ${DPDK_MACHINE_FLAGS} -I${DPDK_INC} -include $(DPDK_INC)/rte_config.h
 else
 INC += -DDISABLE_DPDK
+endif
+
+
+# Tuntap does not need any special libraries
+ifeq ($(TUNTAP),1)
+else
+INC += -DDISABLE_TUNTAP
 endif
 
 ifeq ($(wildcard /usr/lib/libhugetlbfs.so),)

@@ -84,6 +84,7 @@ SetInterfaceInfo(char* dev_name_list)
 		exit(EXIT_FAILURE);
 
 	if (current_iomodule_func == &ps_module_func) {
+
 		/* calculate num_devices now! */
 		num_devices = ps_list_devices(devices);
 		if (num_devices == -1) {
@@ -153,6 +154,7 @@ SetInterfaceInfo(char* dev_name_list)
 			return -1;
 		}
 	} else if (current_iomodule_func == &dpdk_module_func) {
+
 #ifndef DISABLE_DPDK
 		int cpu = CONFIG.num_cores;
 		uint32_t cpumask = 0;
@@ -285,8 +287,8 @@ SetInterfaceInfo(char* dev_name_list)
 		freeifaddrs(ifap);
 #endif /* !DISABLE_DPDK */
 	} else if (current_iomodule_func == &tuntap_module_func) {
-
-                printf("WARNING: trying to configure tuntap device\n");
+                printf("Trying to configure tuntap device\n");
+#ifndef DISABLE_TUNTAP
                 /* Let the great duplication of the code begin!!! */
                 // FIXME: Do I need this?
 		num_queues = MIN(CONFIG.num_cores, MAX_CPUS);
@@ -319,12 +321,13 @@ SetInterfaceInfo(char* dev_name_list)
 			    *(seek + strlen(iter_if->ifa_name)) != ':') {
 				struct ifreq ifr;
 
-                                CONFIG.eths[eidx].ifindex = if_count_used;
-                                ++if_count_used;
 				/* Setting informations */
 				eidx = CONFIG.eths_num++;
-				strcpy(CONFIG.eths[eidx].dev_name, iter_if->ifa_name);
 
+                                CONFIG.eths[eidx].ifindex = if_count_used;
+                                ++if_count_used;
+
+				strcpy(CONFIG.eths[eidx].dev_name, iter_if->ifa_name);
 				strcpy(ifr.ifr_name, iter_if->ifa_name);
 
 				/* Create socket */
@@ -384,6 +387,7 @@ SetInterfaceInfo(char* dev_name_list)
 		freeifaddrs(ifap);
                 fprintf(stderr, "Total number of attached devices: %d\n",
 					num_devices_attached);
+#endif // DISABLE_TUNTAP
         } else {
             printf("ERROR:  This IO Module is not yet supported by %s:%s\n",
                     __FILE__, __FUNCTION__);
